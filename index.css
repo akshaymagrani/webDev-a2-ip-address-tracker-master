@@ -1,0 +1,29 @@
+/*____Global____*/
+/*Colors*/
+:root {
+  --veryDarkGray: hsl(0, 0%, 17%);
+  --darkGray: hsl(0, 0%, 59%);
+}
+body {
+  font-family: "Rubik", sans-serif;
+  font-size: 18px;
+}
+
+#mapid {
+  height: 180px;
+}
+.searchLocation {
+  background-color: black;
+  border: none;
+  padding: 1rem;
+}
+
+/*____Signature____*/
+.attribution {
+  font-size: 11px;
+  text-align: center;
+}
+
+.attribution a {
+  color: hsl(228, 45%, 44%);
+}
