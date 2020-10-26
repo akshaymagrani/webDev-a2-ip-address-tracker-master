@@ -21,30 +21,44 @@
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin=""></script>
 
-
-
 </head>
 
 <body>
 
-  <h1>IP Address Tracker</h1>
+  <section class="header">
+    <h1>IP Address Tracker</h1>
 
-  <div class="searchDiv">
-    <input type="search" name="location" placeholder="Search for any IP address or domain" />
-    <button name="submit" class="searchLocation">
-      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="14">
-        <path fill="none" stroke="#FFF" stroke-width="3" d="M2 1l6 6-6 6" />
-      </svg>
-    </button>
-  </div>
+    <div class="searchDiv">
+      <input id="ip-input" type="search" name="location" placeholder="Search for any IP address or domain" />
+      <button name="submit" class="searchLocation" id="search-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="14">
+          <path fill="none" stroke="#FFF" stroke-width="3" d="M2 1l6 6-6 6" />
+        </svg>
+      </button>
+    </div>
 
+    <div class="details">
+      <div>
+        <p>IP Address</p>
+        <p class="in" id="result__ip-address"></p>
+      </div>
+      <div>
+        <p>Location</p>
+        <p class="in" id="result__location"></p>
+      </div>
+      <div>
+        <p>Timezone</p>
+        <p class="in tm">UTC </p>
+        <p class="in" id="result__timezone"></p>
+      </div>
+      <!-- add offset value dynamically using the API -->
+      <div>
+        <p>ISP</p>
+        <p class="in" id="result__isp"></p>
+      </div>
+    </div>
 
-  IP Address
-  Location
-  Timezone
-  UTC
-  <!-- add offset value dynamically using the API -->
-  ISP
+  </section>
 
   <div id="mapid"></div>
 
@@ -52,6 +66,96 @@
     Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>.
     Coded by <a href="#">Akshaykumar I. Magrani</a>.
   </div>
+  <script>
+    var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox/streets-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: 'pk.eyJ1IjoiYWtzaGF5LW1hZ3JhbmkiLCJhIjoiY2tnbDF1b25sMDZ5MTJ4bzE4N251MzZ6dSJ9.FDAUBPbcSN5pLgiGmHLVTA'
+    }).addTo(mymap);
+
+    let searchText = document.querySelector("#ip-input");
+    let search = document.querySelector("#search-btn");
+
+    let ipifyUrl = 'https://geo.ipify.org/api/v1?apiKey=at_umVl7y0fxeTKMayeqzCdfRFcGYP9P';
+
+    let IPResult = document.querySelector('#result__ip-address');
+    let locationResult = document.querySelector('#result__location');
+    let timezoneResult = document.querySelector('#result__timezone');
+    let ISPResult = document.querySelector('#result__isp');
+
+    //first visit / every refresh, get client's ip;
+    getIpify(ipifyUrl);
+
+
+    search.addEventListener('mouseup', (e) => {
+      execute();
+    });
+
+    window.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        execute();
+      }
+    });
+
+    function execute() {
+      if (!searchText.value) return;
+
+      if (ValidateIPaddress(searchText.value)) {
+        ipifyUrl = 'https://geo.ipify.org/api/v1?apiKey=at_u4q2r5FqJXtoRzApieK9G8vy2ynhx&ipAddress=' + searchText.value;
+      } else {
+        ipifyUrl = 'https://geo.ipify.org/api/v1?apiKey=at_u4q2r5FqJXtoRzApieK9G8vy2ynhx&domain=' + searchText.value;
+      }
+
+      getIpify(ipifyUrl);
+    }
+
+    ///////////////////////
+    function getIpify(url) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let result = JSON.parse(xhttp.responseText);
+          //change text
+          IPResult.innerHTML = result.ip;
+          locationResult.innerHTML = `${result.location.city}, ${result.location.region} ${result.location.postalCode}`;
+          timezoneResult.innerHTML = result.location.timezone;
+          ISPResult.innerHTML = result.isp;
+          //pan map to location
+          let newLatlng = [result.location.lat, result.location.lng];
+          mymap.panTo(newLatlng);
+
+          var myIcon = L.icon({
+            iconUrl: 'images/icon-location.svg',
+            iconSize: [46, 56],
+            iconAnchor: [22, 94],
+            popupAnchor: [-3, -76],
+            shadowSize: [68, 95],
+            shadowAnchor: [22, 94]
+          });
+
+          marker = L.marker(mymap.getCenter(), { icon: myIcon }).addTo(mymap);
+          mymap.setZoom(14);
+
+          marker.setLatLng(newLatlng);
+        }
+      };
+      xhttp.open("GET", url, true);
+      xhttp.send();
+    }
+
+    function ValidateIPaddress(ipAddress) {
+      var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      if (ipAddress.match(ipformat)) {
+        return true;
+      }
+      return false;
+    }
+  </script>
 </body>
 
 </html>
